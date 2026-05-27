@@ -1,0 +1,66 @@
+spring:
+
+  # ── 데이터베이스 ──────────────────────────────────
+  datasource:
+    url: jdbc:mysql://localhost:3306/storyfund_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: asd123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ── JPA ──────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: update # Entity 클래스를 보고 테이블을 자동
+                       # update 는 "테이블이 없으면 만들고, 있으면 변경사항만 반영
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # ── Redis ─────────────────────────────────────────
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # ── 메일 ──────────────────────────────────────────
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ekhvoed5548@gmail.com
+    password: qkrwjdgns9**
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # ── 카카오 소셜 로그인 ─────────────────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: 나중에_입력
+            client-secret: 나중에_입력
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            scope: profile_nickname, account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# ── JWT ───────────────────────────────────────────────
+jwt:
+  secret: "storyfund-secret-key-must-be-at-least-32-characters-long"
+  access-expiration: 1800000     # 30분 (밀리초)
+  refresh-expiration: 604800000  # 7일  (밀리초)
+
+# ── 서버 ──────────────────────────────────────────────
+server:
+  port: 8080
