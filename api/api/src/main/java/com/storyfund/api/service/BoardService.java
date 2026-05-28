@@ -99,7 +99,7 @@ public class BoardService {
 
         // 작성자 본인인지 확인
         if (!board.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("수정 권한이 없습니다.");
+            throw new SecurityException("수정 권한이 없습니다.");
         }
 
         board.setTitle(dto.getTitle());
@@ -121,7 +121,7 @@ public class BoardService {
         boolean isAdmin  = "ROLE_ADMIN".equals(role);
 
         if (!isAuthor && !isAdmin) {
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+            throw new SecurityException("삭제 권한이 없습니다.");
         }
 
         // 실제로 지우지 않고 삭제 시간만 기록
