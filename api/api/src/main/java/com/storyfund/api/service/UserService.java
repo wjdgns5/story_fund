@@ -110,4 +110,13 @@ public class UserService {
         userRepository.save(user);
     }
 
+    // 이메일 인증 완료 처리
+    public void updateEmailVerified(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+    }
+
 }

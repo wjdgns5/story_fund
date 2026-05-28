@@ -1,9 +1,8 @@
 package com.storyfund.api.controller;
 
-import com.storyfund.api.dto.LoginRequestDto;
-import com.storyfund.api.dto.LoginResponseDto;
-import com.storyfund.api.dto.SignupRequestDto;
+import com.storyfund.api.dto.*;
 import com.storyfund.api.security.JwtTokenProvider;
+import com.storyfund.api.service.EmailService;
 import com.storyfund.api.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private UserService userService;
+    private EmailService emailService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, EmailService emailService) {
         this.userService = userService;
+        this.emailService = emailService;
     } // end of Constructor
 
     // 1. 회원가입  -- @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
@@ -87,6 +88,31 @@ public class UserController {
         response.addCookie(cookie);
 
         return ResponseEntity.ok("로그아웃 성공");
+    }
+
+    // 인증 코드 발송
+    @PostMapping("/emails/send")
+    public ResponseEntity<String> sendVerificationCode(@Valid @RequestBody EmailRequestDto dto) {
+        // @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
+        emailService.sendVerificationCode(dto.getEmail());
+        return ResponseEntity.ok("인증 코드를 발송했습니다.");
+    }
+
+    // 인증 코드 확인
+    @PostMapping("/emails/verify")
+    public ResponseEntity<String> verifyCode(@Valid @RequestBody EmailVerifyRequestDto dto) {
+        // @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
+
+        boolean result = emailService.verifyCode(dto.getEmail(), dto.getCode());
+
+        if (!result) {
+            throw new IllegalArgumentException("인증 코드가 일치하지 않거나 만료됐습니다.");
+        }
+
+        // 인증 완료 → DB 업데이트
+        userService.updateEmailVerified(dto.getEmail());
+
+        return ResponseEntity.ok("이메일 인증이 완료됐습니다.");
     }
 
 }
