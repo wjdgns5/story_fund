@@ -3,6 +3,7 @@ package com.storyfund.api.controller;
 import com.storyfund.api.dto.*;
 import com.storyfund.api.security.JwtTokenProvider;
 import com.storyfund.api.service.EmailService;
+import com.storyfund.api.service.KakaoService;
 import com.storyfund.api.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +20,12 @@ public class UserController {
 
     private UserService userService;
     private EmailService emailService;
+    private KakaoService kakaoService;
 
-    public UserController(UserService userService, EmailService emailService) {
+    public UserController(UserService userService, EmailService emailService,  KakaoService kakaoService) {
         this.userService = userService;
         this.emailService = emailService;
+        this.kakaoService = kakaoService;
     } // end of Constructor
 
     // 1. 회원가입  -- @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
@@ -113,6 +116,24 @@ public class UserController {
         userService.updateEmailVerified(dto.getEmail());
 
         return ResponseEntity.ok("이메일 인증이 완료됐습니다.");
+    }
+
+    // 카카오 로그인 API
+    @GetMapping("/kakao")
+    public ResponseEntity<LoginResponseDto> kakaoLogin(@RequestParam String code, HttpServletResponse response) {
+
+        LoginResponseDto result = kakaoService.kakaoLogin(code);
+
+        // Refresh Token Cookie 설정
+        Cookie cookie = new Cookie("refreshToken",
+                userService.getRefreshToken(result.getEmail()));
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(result);
     }
 
 }
