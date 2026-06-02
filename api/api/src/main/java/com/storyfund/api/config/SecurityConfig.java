@@ -42,6 +42,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
 
+                        // Swagger UI 허용 추가
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+
                         // 관리자만 접근 가능
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

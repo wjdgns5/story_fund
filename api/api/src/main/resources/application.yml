@@ -2,8 +2,8 @@ spring:
 
   # ── 데이터베이스 ──────────────────────────────────
   datasource:
-    url: jdbc:mysql://localhost:3306/storyfund_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
+    url: ${DB_URL}
+    username: ${DB_NAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
@@ -28,7 +28,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ekhvoed5548@gmail.com
+    username: ${MAIL_ID}
     password: ${MAIL_PASSWORD} # 발급받은_16자리_앱비밀번호
     properties:
       mail:
@@ -64,3 +64,14 @@ jwt:
 # ── 서버 ──────────────────────────────────────────────
 server:
   port: 8080
+
+# Swagger
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html         # Swagger UI 접속 경로
+    tags-sorter: alpha             # 태그 알파벳 순 정렬
+    operations-sorter: alpha       # API 알파벳 순 정렬
+  api-docs:
+    path: /v3/api-docs             # API 문서 JSON 경로
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
