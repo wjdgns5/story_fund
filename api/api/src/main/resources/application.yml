@@ -75,3 +75,8 @@ springdoc:
     path: /v3/api-docs             # API 문서 JSON 경로
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# Toss Payments
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  confirm-url: https://api.tosspayments.com/v1/payments/confirm
