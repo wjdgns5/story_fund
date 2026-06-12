@@ -43,6 +43,9 @@ public class UserService {
                 .nickname(dto.getNickname())
                 .build();
 
+        // 회원가입 완료 후 이메일 인증 처리
+        user.setEmailVerified(true);
+
         // 유저 데이터 DB에 저장
         userRepository.save(user);
     }

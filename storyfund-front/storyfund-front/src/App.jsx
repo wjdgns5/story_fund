@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-// import SignupPage from "./pages/SignupPage";
-// import BoardListPage from "./pages/BoardListPage";
+import SignupPage from "./pages/SignupPage";
+import BoardListPage from "./pages/BoardListPage";
 // import BoardDetailPage from "./pages/BoardDetailPage";
 // import BoardCreatePage from "./pages/BoardCreatePage";
 
@@ -14,12 +14,12 @@ function App() {
 
         {/* 인증 */}
         <Route path="/login" element={<LoginPage />} />
-        {/* <Route path="/signup" element={<SignupPage />} /> */}
+        <Route path="/signup" element={<SignupPage />} />
 
         {/* 게시판 */}
-        {/* <Route path="/boards" element={<BoardListPage />} />
-        <Route path="/boards/:id" element={<BoardDetailPage />} />
-        <Route path="/boards/create" element={<BoardCreatePage />} /> */}
+        <Route path="/boards" element={<BoardListPage />} />
+        {/* <Route path="/boards/:id" element={<BoardDetailPage />} /> */}
+        {/* <Route path="/boards/create" element={<BoardCreatePage />} /> */}
       </Routes>
     </BrowserRouter>
   );

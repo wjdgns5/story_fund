@@ -121,7 +121,7 @@ public class UserController {
         }
 
         // 인증 완료 → DB 업데이트
-        userService.updateEmailVerified(dto.getEmail());
+       // userService.updateEmailVerified(dto.getEmail());
 
         return ResponseEntity.ok("이메일 인증이 완료됐습니다.");
     }
