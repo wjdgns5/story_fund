@@ -1,5 +1,6 @@
 package com.storyfund.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -16,5 +17,6 @@ public class BoardCreateRequestDto {
     @Size(max = 5000, message = "내용은 5000자 이하여야 합니다.")
     private String content;
 
+    @JsonProperty("isPaid")   // ← 이거 추가
     private boolean isPaid;   // 유료 여부 (기본값 false)
 }

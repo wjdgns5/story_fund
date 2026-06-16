@@ -6,6 +6,7 @@ import com.storyfund.api.dto.BoardResponseDto;
 import com.storyfund.api.entity.Board;
 import com.storyfund.api.entity.User;
 import com.storyfund.api.repository.BoardRepository;
+import com.storyfund.api.repository.UnlockHistoryRepository;
 import com.storyfund.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,10 +23,12 @@ public class BoardService {
 
     private BoardRepository boardRepository;
     private UserRepository userRepository;
+    private UnlockHistoryRepository unlockHistoryRepository;
 
-    public BoardService(BoardRepository boardRepository, UserRepository userRepository) {
+    public BoardService(BoardRepository boardRepository, UserRepository userRepository, UnlockHistoryRepository unlockHistoryRepository) {
         this.boardRepository = boardRepository;
         this.userRepository = userRepository;
+        this.unlockHistoryRepository = unlockHistoryRepository;
     } // end of 생성자
 
     // 1. 게시글 목록 조회
@@ -49,7 +52,7 @@ public class BoardService {
 
     // 2. 게시글 상세 조회
     @Transactional
-    public BoardResponseDto getBoard(Long id) {
+    public BoardResponseDto getBoard(Long id, String email) {
 
         Board board = boardRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow( ()-> new IllegalArgumentException("존재하지 않는 게시물 입니다.") );
@@ -57,7 +60,34 @@ public class BoardService {
         // 조회수 +1
         board.setViewCount(board.getViewCount() +1);
 
-        return new BoardResponseDto(board);
+        // 무료 글이면 바로 반환
+        if (!board.isPaid()) {
+            return new BoardResponseDto(board);
+        }
+
+        // 유료 글 — 열람 권한 확인
+        // 1. 비로그인이면 잠김
+        if (email == null || "anonymousUser".equals(email)) {
+            return new BoardResponseDto(board, true);
+        }
+
+        // 2. 작성자 본인이면 바로 열람
+        if (board.getUser().getEmail().equals(email)) {
+            return new BoardResponseDto(board);
+        }
+
+        // 3. 열람 이력 있으면 전체 반환
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        boolean hasUnlocked = unlockHistoryRepository
+                .existsByUserAndBoard(user, board);
+
+        if (hasUnlocked) {
+            return new BoardResponseDto(board);        // 전체 내용
+        } else {
+            return new BoardResponseDto(board, true);  // 미리보기만
+        }
 
         /**
          * @Transactional 이 없으면 board.setViewCount() 만 해도 DB에 저장이 안 돼요.

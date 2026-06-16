@@ -1,5 +1,6 @@
 package com.storyfund.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.storyfund.api.entity.Board;
 import lombok.Getter;
 
@@ -12,7 +13,10 @@ public class BoardListResponseDto {
     private Long id;
     private String title;
     private String authorNickname;
+
+    @JsonProperty("isPaid")
     private boolean isPaid;
+
     private int viewCount;
     private LocalDateTime createdAt;
 

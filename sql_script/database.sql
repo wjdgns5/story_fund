@@ -4,3 +4,18 @@ CREATE DATABASE storyfund_db
     
 select *
 from users;
+
+select *
+from payments;
+
+select *
+ from boards;
+ 
+ SELECT * FROM 
+ unlock_histories;
+ 
+ UPDATE users 
+ SET coin = 10
+ WHERE email = 'rhfovkeh5@naver.com';
+ 
+ 

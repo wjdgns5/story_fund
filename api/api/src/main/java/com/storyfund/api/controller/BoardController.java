@@ -39,8 +39,8 @@ public class BoardController {
     // 2. 게시글 상세 조회 (비회원 가능)
     @Operation(summary = "게시글 상세 조회", description = "조회 시 viewCount +1. 비회원 가능")
     @GetMapping("/{id}")
-    public ResponseEntity<BoardResponseDto> getBoard(@PathVariable Long id) {
-        return ResponseEntity.ok(boardService.getBoard(id));
+    public ResponseEntity<BoardResponseDto> getBoard(@PathVariable Long id,  @AuthenticationPrincipal String email) {
+        return ResponseEntity.ok(boardService.getBoard(id, email));
     }
 
     // 3. 게시글 작성 (로그인 필요)
