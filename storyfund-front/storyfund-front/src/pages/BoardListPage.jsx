@@ -69,6 +69,17 @@ function BoardListPage() {
           {isLogin ? (
             <>
               <button
+                style={{
+                  ...styles.button,
+                  background: "#FFD700",
+                  color: "#333",
+                }}
+                onClick={() => navigate("/payment")}
+              >
+                🪙 코인 충전
+              </button>
+
+              <button
                 style={styles.button}
                 onClick={() => navigate("/boards/create")}
               >

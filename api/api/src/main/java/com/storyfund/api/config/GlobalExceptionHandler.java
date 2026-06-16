@@ -49,6 +49,10 @@ public class GlobalExceptionHandler {
     // 4. 그 외 모든 예외 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
+
+        System.out.println("=== 서버 에러 ===");
+        System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponseDto(500, "서버 오류가 발생했습니다."));

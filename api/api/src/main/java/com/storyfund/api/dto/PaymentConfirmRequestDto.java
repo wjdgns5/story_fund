@@ -1,6 +1,7 @@
 package com.storyfund.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
@@ -13,6 +14,6 @@ public class PaymentConfirmRequestDto {
     @NotBlank(message = "orderId 가 없습니다.")
     private String orderId; // 주문 ID
 
-    @NotBlank(message = "금액이 없습니다.")
+    @NotNull(message = "금액이 없습니다.")
     private Integer amount; // 결제 금액
 }

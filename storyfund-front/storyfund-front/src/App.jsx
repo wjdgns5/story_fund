@@ -5,6 +5,9 @@ import BoardListPage from "./pages/BoardListPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
 import BoardCreatePage from "./pages/BoardCreatePage";
 import BoardEditPage from "./pages/BoardEditPage";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentFailPage from "./pages/PaymentFailPage";
 
 function App() {
   return (
@@ -23,6 +26,11 @@ function App() {
         {/* ← 추가 */}
         <Route path="/boards/:id" element={<BoardDetailPage />} />{" "}
         {/* ← 아래 */}
+        <Route path="/payment" element={<PaymentPage />} /> {/* ← 추가 */}
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />{" "}
+        {/* ← 추가 */}
+        <Route path="/payment/fail" element={<PaymentFailPage />} />{" "}
+        {/* ← 추가 */}
       </Routes>
     </BrowserRouter>
   );
