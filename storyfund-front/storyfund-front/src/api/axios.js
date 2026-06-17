@@ -29,7 +29,7 @@ api.interceptors.response.use(
       try {
         // Refresh Token 으로 새 Access Token 발급
         const response = await axios.post(
-          "http://localhost:8080/api/auth/refresh",
+          `${import.meta.env.VITE_API_URL}/api/auth/refresh`,
           {},
           { withCredentials: true }, // Cookie 전송
         );
