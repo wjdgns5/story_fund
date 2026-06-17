@@ -3,6 +3,7 @@ package com.storyfund.api.config;
 import com.storyfund.api.security.JwtAuthenticationFilter;
 import com.storyfund.api.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Value("${app.front-url}")
+    private String frontUrl;
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -76,7 +80,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.addAllowedOrigin("http://localhost:5173");  // React 주소
+        configuration.addAllowedOrigin(frontUrl);  // React 주소
         configuration.addAllowedMethod("*");   // GET, POST, PUT, DELETE 전부 허용
         configuration.addAllowedHeader("*");   // 모든 헤더 허용
         configuration.setAllowCredentials(true); // Cookie 전송 허용

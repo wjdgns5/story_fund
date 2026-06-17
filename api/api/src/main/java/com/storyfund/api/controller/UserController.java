@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,9 @@ import java.io.IOException;
 @RequestMapping("/api/auth")
 @RestController // @Controller + @ResponseBody 를 합친 거
 public class UserController {
+
+    @Value("${app.front-url}")
+    private String frontUrl;
 
     private UserService userService;
     private EmailService emailService;
@@ -106,7 +110,7 @@ public class UserController {
     }
 
     // 인증 코드 발송
-    @Operation(summary = "카카오 소셜 로그인", description = "카카오 인가 코드로 로그인. 신규 유저면 자동 회원가입")
+    @Operation(summary = "이메일 인증 코드 발송", description = "이메일 인증 코드 발송")
     @PostMapping("/emails/send")
     public ResponseEntity<String> sendVerificationCode(@Valid @RequestBody EmailRequestDto dto) {
         // @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
@@ -115,7 +119,7 @@ public class UserController {
     }
 
     // 인증 코드 확인
-    @Operation(summary = "이메일 인증 코드 발송")
+    @Operation(summary = "이메일 인증 코드 확인", description = "이메일 인증 코드 확인")
     @PostMapping("/emails/verify")
     public ResponseEntity<String> verifyCode(@Valid @RequestBody EmailVerifyRequestDto dto) {
         // @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
@@ -133,7 +137,7 @@ public class UserController {
     }
 
     // 카카오 로그인 API
-    @Operation(summary = "이메일 인증 코드 확인")
+    @Operation(summary = "카카오 소셜 로그인", description = "카카오 인가 코드로 로그인. 신규 유저면 자동 회원가입")
     @GetMapping("/kakao")
     public void kakaoLogin(@RequestParam String code, HttpServletResponse response) throws IOException {
 
@@ -150,7 +154,7 @@ public class UserController {
 
         // ✅ React 앱으로 리다이렉트 (토큰을 URL 파라미터로 전달)
         response.sendRedirect(
-                "http://localhost:5173/oauth/kakao?token=" + result.getAccessToken()
+                frontUrl + "/oauth/kakao?token=" + result.getAccessToken()
         );
     }
 }
