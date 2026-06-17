@@ -1,6 +1,7 @@
 package com.storyfund.api.controller;
 
 import com.storyfund.api.dto.*;
+import com.storyfund.api.entity.User;
 import com.storyfund.api.service.EmailService;
 import com.storyfund.api.service.KakaoService;
 import com.storyfund.api.service.UserService;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -144,5 +146,4 @@ public class UserController {
 
         return ResponseEntity.ok(result);
     }
-
 }

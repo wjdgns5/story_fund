@@ -1,12 +1,16 @@
 package com.storyfund.api.service;
 
-import com.storyfund.api.dto.LoginRequestDto;
-import com.storyfund.api.dto.LoginResponseDto;
-import com.storyfund.api.dto.SignupRequestDto;
+import com.storyfund.api.dto.*;
 import com.storyfund.api.entity.User;
+import com.storyfund.api.repository.BoardRepository;
+import com.storyfund.api.repository.UnlockHistoryRepository;
 import com.storyfund.api.repository.UserRepository;
 import com.storyfund.api.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +20,15 @@ public class UserService {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private JwtTokenProvider jwtTokenProvider;
+    private BoardRepository boardRepository;
+    private UnlockHistoryRepository unlockHistoryRepository;
 
-    public UserService (UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider){
+    public UserService (UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, BoardRepository boardRepository, UnlockHistoryRepository unlockHistoryRepository){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.boardRepository = boardRepository;
+        this.unlockHistoryRepository = unlockHistoryRepository;
     } // end of Constructor
 
     // 1. 회원가입
@@ -120,6 +128,37 @@ public class UserService {
 
         user.setEmailVerified(true);
         userRepository.save(user);
+    }
+
+    // 내 정보 조회
+    public UserInfoResponseDto getMyInfo(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+        return new UserInfoResponseDto(user);
+    }
+
+    // 내 게시글 목록
+    public Page<BoardListResponseDto> getMyBoards(String email, int page) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        Pageable pageable = PageRequest.of(page, 10,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return boardRepository.findByUserAndDeletedAtIsNull(user, pageable)
+                .map(BoardListResponseDto::new);
+    }
+
+    // 열람 내역
+    public Page<UnlockHistoryResponseDto> getMyUnlocked(String email, int page) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        Pageable pageable = PageRequest.of(page, 10);
+
+        return unlockHistoryRepository
+                .findByUserOrderByUnlockedAtDesc(user, pageable)
+                .map(UnlockHistoryResponseDto::new);
     }
 
 }

@@ -8,6 +8,7 @@ import BoardEditPage from "./pages/BoardEditPage";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentFailPage from "./pages/PaymentFailPage";
+import MyPage from "./pages/MyPage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         {/* ← 추가 */}
         <Route path="/payment/fail" element={<PaymentFailPage />} />{" "}
         {/* ← 추가 */}
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );

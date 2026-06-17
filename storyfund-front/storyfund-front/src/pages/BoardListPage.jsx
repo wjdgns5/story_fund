@@ -85,6 +85,14 @@ function BoardListPage() {
               >
                 글쓰기
               </button>
+
+              <button
+                style={{ ...styles.button, background: "#6c757d" }}
+                onClick={() => navigate("/mypage")} // ← 추가
+              >
+                마이페이지
+              </button>
+
               <button
                 style={{ ...styles.button, background: "#6c757d" }}
                 onClick={handleLogout}

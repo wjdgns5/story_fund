@@ -1,6 +1,7 @@
 package com.storyfund.api.repository;
 
 import com.storyfund.api.entity.Board;
+import com.storyfund.api.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     // 삭제 안 된 게시글 단건 조회
     Optional<Board> findByIdAndDeletedAtIsNull(Long id);
+
+    // 특정 유저의 게시글 목록 (삭제 제외)
+    Page<Board> findByUserAndDeletedAtIsNull(User user, Pageable pageable);
 }
