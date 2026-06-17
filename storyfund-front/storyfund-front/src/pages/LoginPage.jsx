@@ -25,6 +25,22 @@ function LoginPage() {
     }
   };
 
+  // 카카오 로그인 — 카카오 인증 페이지로 이동
+  const handleKakaoLogin = () => {
+    const kakaoAuthUrl =
+      `https://kauth.kakao.com/oauth/authorize` +
+      `?client_id=${import.meta.env.VITE_KAKAO_CLIENT_ID}` +
+      `&redirect_uri=${import.meta.env.VITE_KAKAO_REDIRECT_URI}` +
+      `&response_type=code`;
+
+    window.location.href = kakaoAuthUrl;
+  };
+
+  // Enter 키 로그인
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleLogin();
+  };
+
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>로그인</h2>
@@ -50,6 +66,19 @@ function LoginPage() {
 
       <button style={styles.button} onClick={handleLogin}>
         로그인
+      </button>
+
+      {/* 구분선 */}
+      <div style={styles.dividerRow}>
+        <div style={styles.dividerLine} />
+        <span style={styles.dividerText}>또는</span>
+        <div style={styles.dividerLine} />
+      </div>
+
+      {/* 카카오 로그인 버튼 */}
+      <button style={styles.kakaoButton} onClick={handleKakaoLogin}>
+        <img src="/image/kakao.png" width={20} height={20} />
+        카카오로 로그인
       </button>
 
       <p style={styles.link}>
@@ -86,6 +115,7 @@ const styles = {
     border: "1px solid #ddd",
     borderRadius: "6px",
     fontSize: "14px",
+    outline: "none",
   },
   button: {
     padding: "12px",
@@ -95,12 +125,48 @@ const styles = {
     borderRadius: "6px",
     fontSize: "14px",
     cursor: "pointer",
+    fontWeight: "600",
   },
   error: {
     color: "red",
     fontSize: "13px",
     margin: "0",
   },
+
+  // ── 구분선 ──
+  dividerRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    margin: "4px 0",
+  },
+  dividerLine: {
+    flex: 1,
+    height: "1px",
+    background: "#ddd",
+  },
+  dividerText: {
+    fontSize: "13px",
+    color: "#aaa",
+    whiteSpace: "nowrap",
+  },
+
+  // ── 카카오 버튼 ──
+  kakaoButton: {
+    padding: "12px",
+    background: "#FEE500",
+    color: "#191919",
+    border: "none",
+    borderRadius: "6px",
+    fontSize: "14px",
+    fontWeight: "700",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+  },
+
   link: {
     textAlign: "center",
     fontSize: "13px",

@@ -9,6 +9,7 @@ import PaymentPage from "./pages/PaymentPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentFailPage from "./pages/PaymentFailPage";
 import MyPage from "./pages/MyPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
         <Route path="/payment/fail" element={<PaymentFailPage />} />{" "}
         {/* ← 추가 */}
         <Route path="/mypage" element={<MyPage />} />
+        // Routes 안에
+        <Route path="/oauth/kakao" element={<OAuthCallbackPage />} />
       </Routes>
     </BrowserRouter>
   );

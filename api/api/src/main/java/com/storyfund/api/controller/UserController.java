@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @Tag(name = "Auth", description = "인증 API") //  API 를 그룹으로 묶는다. -> Auth 그룹
 
 @RequestMapping("/api/auth")
@@ -26,14 +28,15 @@ public class UserController {
     private EmailService emailService;
     private KakaoService kakaoService;
 
-    public UserController(UserService userService, EmailService emailService,  KakaoService kakaoService) {
+    public UserController(UserService userService, EmailService emailService, KakaoService kakaoService) {
         this.userService = userService;
         this.emailService = emailService;
         this.kakaoService = kakaoService;
     } // end of Constructor
 
     // 1. 회원가입  -- @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
-    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임으로 회원가입") // summary — API 이름 (짧게) description — 상세 설명 (길게)
+    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임으로 회원가입")
+    // summary — API 이름 (짧게) description — 상세 설명 (길게)
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto dto) {
         userService.signup(dto);
@@ -41,10 +44,11 @@ public class UserController {
     }
 
     // 2. 로그인 -- @Valid — DTO 에 달아둔 @NotBlank, @Email 같은 검증을 실행
-    @Operation(summary = "로그인", description = "이메일, 비밀번호로 로그인. Access Token 반환, Refresh Token Cookie 저장") // summary — API 이름 (짧게) description — 상세 설명 (길게)
+    @Operation(summary = "로그인", description = "이메일, 비밀번호로 로그인. Access Token 반환, Refresh Token Cookie 저장")
+    // summary — API 이름 (짧게) description — 상세 설명 (길게)
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto dto,
-                                        HttpServletResponse response) {
+                                                  HttpServletResponse response) {
 
         LoginResponseDto result = userService.login(dto);
 
@@ -123,7 +127,7 @@ public class UserController {
         }
 
         // 인증 완료 → DB 업데이트
-       // userService.updateEmailVerified(dto.getEmail());
+        // userService.updateEmailVerified(dto.getEmail());
 
         return ResponseEntity.ok("이메일 인증이 완료됐습니다.");
     }
@@ -131,7 +135,7 @@ public class UserController {
     // 카카오 로그인 API
     @Operation(summary = "이메일 인증 코드 확인")
     @GetMapping("/kakao")
-    public ResponseEntity<LoginResponseDto> kakaoLogin(@RequestParam String code, HttpServletResponse response) {
+    public void kakaoLogin(@RequestParam String code, HttpServletResponse response) throws IOException {
 
         LoginResponseDto result = kakaoService.kakaoLogin(code);
 
@@ -144,6 +148,10 @@ public class UserController {
         cookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(cookie);
 
-        return ResponseEntity.ok(result);
+        // ✅ React 앱으로 리다이렉트 (토큰을 URL 파라미터로 전달)
+        response.sendRedirect(
+                "http://localhost:5173/oauth/kakao?token=" + result.getAccessToken()
+        );
     }
 }
+
