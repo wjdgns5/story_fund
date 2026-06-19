@@ -1,7 +1,7 @@
 # StoryFund
 
 홈페이지
-https://mieotwd.shop/swagger-ui.html
+https://mieotwd.shop
 
 API 문서 (Swagger)
 https://mieotwd.shop/swagger-ui.html
