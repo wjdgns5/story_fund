@@ -1,15 +1,39 @@
 # StoryFund
 
-홈페이지
-https://mieotwd.shop
-
-API 문서 (Swagger)
-https://mieotwd.shop/swagger-ui.html
-
-
 > 유료 게시판 플랫폼 — JWT 인증 · 카카오 소셜 로그인 · Toss 결제
 >
-> 신입 개발자 포트폴리오 프로젝트
+> 신입 개발자 포트폴리오 프로젝트 · **AWS EC2 + RDS 배포 완료**
+
+🔗 **[홈페이지 바로가기](https://mieotwd.shop)** · 📄 **[API 문서 (Swagger)](https://mieotwd.shop/swagger-ui.html)**
+
+<!--
+  ⬇️ 여기에 실제 화면 스크린샷 2~3장을 넣어주세요.
+  예: 로그인 화면, 게시판 목록, 유료글 잠금 화면
+  마크다운 이미지 문법: ![설명](./docs/images/파일명.png)
+-->
+
+| 로그인 / 게시판 목록 | 유료 게시글 잠금 화면 |
+|---|---|
+| ![로그인 화면](./docs/images/login.png) | ![유료글 잠금](./docs/images/board-lock.png) |
+
+---
+
+## 🧪 지금 바로 체험해보세요
+
+로그인만 하면 바로 모든 기능을 써볼 수 있어요. 회원가입 없이 아래 계정으로 로그인해주세요.
+
+| 이메일 | 비밀번호 | 코인 |
+|---|---|---|
+| interviewer@test.com | Interview1234! | 50 |
+| interviewer1@test.com | Interview1234! | 50 |
+| interviewer2@test.com | Interview1234! | 50 |
+
+- 코인이 미리 충전되어 있어 **유료 게시글 열람 기능도 바로 체험 가능**해요.
+- 카카오 로그인 버튼으로도 간편하게 체험할 수 있어요.
+- 계정이 3개인 이유: 동시에 여러 분이 체험하시거나, 하나가 꼬여도 바로 다른 계정으로 이용하실 수 있게 준비했어요.
+
+> ⚠️ 데모 전용 계정입니다. Toss 결제는 테스트 키로 연동되어 있어 실제 금액이 청구되지 않아요.
+> AWS EC2 프리 티어(t2.micro)로 배포된 데모라 트래픽이 몰리면 응답이 느릴 수 있어요.
 
 ---
 
@@ -29,7 +53,92 @@ StoryFund 는 창작자가 게시글을 작성하고 유료로 설정할 수 있
 ✅ Toss Payments 코인 충전 결제 (금액 위변조 방지)
 ✅ 마이페이지 (내 정보, 게시글, 결제/열람 내역)
 ✅ Swagger API 문서
+✅ AWS EC2 + RDS 배포, 도메인 연결, HTTPS(Let's Encrypt) 적용
 ```
+
+---
+
+## 🔐 인증(JWT) 처리 흐름
+
+Access Token 과 Refresh Token 을 분리해서 발급하고, 저장 위치도 다르게 설계했어요.
+
+### 로그인 시
+
+```
+로그인 요청 (이메일 + 비밀번호)
+        │
+        ▼
+서버: 비밀번호 BCrypt 검증
+        │
+        ▼
+┌───────────────────────────┬────────────────────────────┐
+│ Access Token (30분)       │ Refresh Token (7일)         │
+│ 응답 body 로 전달          │ HttpOnly Cookie 로 전달      │
+│ → localStorage 저장       │ → JS 로 접근 불가 (XSS 방어) │
+└───────────────────────────┴────────────────────────────┘
+```
+
+### API 요청 중 Access Token 이 만료됐을 때 (자동 갱신)
+
+```
+API 요청 → 401 Unauthorized 응답
+        │
+        ▼
+axios 응답 인터셉터가 401 감지
+        │
+        ▼
+Refresh Token(Cookie) 으로 재발급 요청 (/api/auth/refresh)
+        │
+        ▼
+새 Access Token 발급 → 실패했던 원래 요청 자동 재시도
+        │
+        ▼
+사용자는 로그인이 끊긴 걸 전혀 느끼지 못함
+```
+
+### 로그아웃 시
+
+```
+로그아웃 요청
+        │
+        ▼
+서버: DB 에 저장된 Refresh Token 값을 null 로 초기화
+        │
+        ▼
+클라이언트: localStorage 의 Access Token 삭제
+        │
+        ▼
+Refresh Token Cookie 삭제 (Max-Age=0)
+```
+
+**설계 포인트**
+- Access Token 을 짧게(30분) 설정해 탈취돼도 피해를 최소화
+- Refresh Token 은 HttpOnly Cookie 에 저장해 XSS 공격으로부터 보호
+- 로그아웃 시 DB 의 Refresh Token 값 자체를 무효화해, 만약 토큰이 탈취되어 있었더라도 재사용 불가능하게 처리
+
+---
+
+## 🔒 유료 게시글 잠금 처리 흐름
+
+프론트엔드가 아닌 **백엔드에서 최종 검증**하도록 설계했어요. (개발자 도구로 API를 직접 호출해도 우회 불가)
+
+```
+게시글 상세 조회 요청
+        │
+        ▼
+무료 게시글인가? ──── Yes ──→ 전체 내용 응답
+        │ No
+        ▼
+로그인 상태인가? ──── No ──→ 앞 100자만 응답 (locked: true)
+        │ Yes
+        ▼
+작성자 본인이거나 구매 이력 있음? ── No ──→ 앞 100자만 응답 (locked: true)
+        │ Yes
+        ▼
+전체 내용 응답 (locked: false)
+```
+
+"코인으로 열람하기" 클릭 시 → 코인 1개 차감 + 구매 이력(`unlock_histories`) 기록 → 이후 재조회 시 전체 내용 응답
 
 ---
 
@@ -47,11 +156,15 @@ StoryFund 는 창작자가 게시글을 작성하고 유료로 설정할 수 있
 | Spring OAuth2 Client | 4.x    | 카카오 소셜 로그인         |
 | jjwt                 | 0.12.6 | JWT 생성/검증              |
 | springdoc-openapi    | 2.8.8  | Swagger API 문서           |
-| MySQL                | 8.0    | 메인 데이터베이스          |
+| MySQL                | 8.4    | 메인 데이터베이스          |
 | Redis                | 7.x    | 이메일 인증 TTL 저장       |
 | Lombok               | -      | 코드 간소화                |
 | Java                 | 21     | 언어                       |
 | Gradle               | -      | 빌드 도구                  |
+
+> MySQL 은 배포 환경에서 **8.4** 로 운영 중입니다. (AWS RDS MySQL 8.0
+> 표준 지원 종료 공지에 따라, 스냅샷 백업 후 8.4로 메이저 버전
+> 업그레이드를 진행했습니다.)
 
 ### Frontend
 
@@ -80,6 +193,16 @@ npm install react react-dom react-router-dom axios @tosspayments/tosspayments-sd
 | Kakao OAuth2  | 소셜 로그인      |
 | Toss Payments | 결제 위젯        |
 | Gmail SMTP    | 이메일 인증 발송 |
+
+### 인프라 (배포)
+
+| 서비스              | 용도                                   |
+| ------------------- | -------------------------------------- |
+| AWS EC2 (t2.micro)  | Spring Boot + Redis + Nginx 구동       |
+| AWS RDS (MySQL 8.4) | 운영 데이터베이스                      |
+| Nginx               | 정적 파일 서빙 + API 리버스 프록시     |
+| Let's Encrypt / Certbot | 무료 HTTPS 인증서 발급/적용        |
+| Gabia               | 도메인(mieotwd.shop) 구매 및 DNS 연결 |
 
 ---
 
@@ -159,7 +282,7 @@ storyfund-front/
 
 ```
 - Java 21
-- MySQL 8.0
+- MySQL 8.4 (8.0도 호환되나, 배포 환경과 동일하게 8.4 권장)
 - Redis (WSL + Ubuntu 권장)
 - Node.js 18+
 - IntelliJ IDEA
@@ -315,7 +438,7 @@ VITE_TOSS_CLIENT_KEY=test_ck_...
 > 코드에서는 `import.meta.env.VITE_API_URL` 형태로 사용해요.
 
 | 변수명                    | 설명                                  |
-| ------------------------- | ------------------------------------- |
+| ------------------------- | -------------------------------------- |
 | `VITE_API_URL`            | 백엔드 API 주소 (axios baseURL)       |
 | `VITE_KAKAO_CLIENT_ID`    | 카카오 REST API 키 (백엔드와 동일 키) |
 | `VITE_KAKAO_REDIRECT_URI` | 카카오 인가 코드를 받을 백엔드 URL    |
@@ -440,7 +563,8 @@ npm run dev
 | GET    | `/me/boards`   | 내 게시글 목록 | ✅   |
 | GET    | `/me/unlocked` | 열람 내역      | ✅   |
 
-> Swagger UI: `http://localhost:8080/swagger-ui.html`
+> 로컬 Swagger UI: `http://localhost:8080/swagger-ui.html`
+> 배포 Swagger UI: `https://mieotwd.shop/swagger-ui.html`
 
 ---
 
@@ -464,8 +588,9 @@ boards (1) ──── (N) unlock_histories
 
 ## 🌐 HTTP 배포 전 / 배포 후 설정 가이드
 
-로컬 개발(HTTP) 과 배포(HTTPS) 환경은 설정이 달라져야 하는 부분이 있어요.
-배포 직전에 아래 항목들을 꼭 확인해주세요.
+> 아래는 로컬(HTTP) → 배포(HTTPS) 전환 시 실제로 변경했던 항목들입니다.
+> 현재 운영 중인 `https://mieotwd.shop` 은 이미 "배포 후" 값이 전부
+> 적용된 상태입니다.
 
 ### 1. Cookie Secure 옵션
 
@@ -475,7 +600,7 @@ boards (1) ──── (N) unlock_histories
 // 배포 전 (HTTP, 로컬)
 cookie.setSecure(false);
 
-// 배포 후 (HTTPS 필수)
+// 배포 후 (HTTPS 필수) — 현재 운영 서버에 적용된 값
 cookie.setSecure(true);
 ```
 
@@ -496,8 +621,8 @@ configuration.addAllowedOrigin(frontUrl);  // app.front-url 환경변수 사용
 # 배포 전 (.env)
 FRONT_URL=http://localhost:5173
 
-# 배포 후 (.env)
-FRONT_URL=https://storyfund.com   # 실제 배포 도메인
+# 배포 후 (.env) — 현재 운영 서버에 적용된 값
+FRONT_URL=https://mieotwd.shop
 ```
 
 > 코드 수정 없이 환경변수만 바꾸면 돼요.
@@ -513,7 +638,7 @@ security:
     client:
       registration:
         kakao:
-          redirect-uri: http://localhost:8080/api/auth/kakao # 배포 시 도메인으로 변경
+          redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao}
 ```
 
 ```
@@ -521,7 +646,7 @@ security:
 
 https://developers.kakao.com
 → 카카오 로그인 → Redirect URI
-→ https://api.storyfund.com/api/auth/kakao 추가
+→ https://mieotwd.shop/api/auth/kakao 추가
 (기존 localhost URI 는 유지해도 무방, 같이 등록 가능)
 ```
 
@@ -535,7 +660,7 @@ response.sendRedirect(frontUrl + "/oauth/kakao?token=" + result.getAccessToken()
 ```
 
 > `frontUrl` 이 `FRONT_URL` 환경변수를 그대로 쓰기 때문에
-> 위 3번 항목과 마찬가지로 `.env` 값만 바꾸면 자동 반영돼요.
+> 위 2번 항목과 마찬가지로 `.env` 값만 바꾸면 자동 반영돼요.
 
 ---
 
@@ -546,9 +671,9 @@ response.sendRedirect(frontUrl + "/oauth/kakao?token=" + result.getAccessToken()
 VITE_API_URL=http://localhost:8080
 VITE_KAKAO_REDIRECT_URI=http://localhost:8080/api/auth/kakao
 
-# 배포 후 (.env.production 또는 배포 환경변수)
-VITE_API_URL=https://api.storyfund.com
-VITE_KAKAO_REDIRECT_URI=https://api.storyfund.com/api/auth/kakao
+# 배포 후 (.env.production) — 현재 운영 서버에 적용된 값
+VITE_API_URL=https://mieotwd.shop
+VITE_KAKAO_REDIRECT_URI=https://mieotwd.shop/api/auth/kakao
 ```
 
 > `npm run build` 시 `.env.production` 이 있으면 자동으로 우선 적용돼요.
@@ -567,6 +692,9 @@ TOSS_SECRET_KEY=live_sk_...
 VITE_TOSS_CLIENT_KEY=live_ck_...
 ```
 
+> 본 프로젝트는 포트폴리오 목적으로 **현재도 테스트 키로 운영** 중입니다.
+> (실제 결제가 발생하지 않습니다)
+
 ---
 
 ### 7. JPA ddl-auto
@@ -578,7 +706,7 @@ spring:
     hibernate:
       ddl-auto: update
 
-# 배포 후 (운영)
+# 배포 후 (운영 권장)
 spring:
   jpa:
     hibernate:
@@ -611,16 +739,16 @@ public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
 
 ### 📋 배포 체크리스트 요약
 
-| 항목                | 배포 전                 | 배포 후                        |
-| ------------------- | ----------------------- | ------------------------------ |
-| Cookie Secure       | `false`                 | `true`                         |
-| FRONT_URL           | `http://localhost:5173` | 실제 도메인 (https)            |
-| 카카오 Redirect URI | localhost               | 실제 도메인 + 카카오 콘솔 등록 |
-| VITE_API_URL        | localhost:8080          | 실제 API 도메인                |
-| Toss 키             | test\_ 키               | live\_ 키 (심사 필요)          |
-| ddl-auto            | update                  | validate / none                |
-| show-sql            | true                    | false                          |
-| 에러 메시지         | 콘솔 출력               | 로깅 프레임워크 권장           |
+| 항목                | 배포 전                 | 배포 후 (현재 적용된 값)         |
+| ------------------- | ----------------------- | -------------------------------- |
+| Cookie Secure       | `false`                 | `true`                            |
+| FRONT_URL           | `http://localhost:5173` | `https://mieotwd.shop`           |
+| 카카오 Redirect URI | localhost                | `https://mieotwd.shop/api/auth/kakao` |
+| VITE_API_URL        | localhost:8080          | `https://mieotwd.shop`           |
+| Toss 키             | test\_ 키               | test\_ 키 유지 (포트폴리오 목적) |
+| ddl-auto            | update                  | update (운영 전환 시 validate 권장) |
+| show-sql            | true                    | true (운영 전환 시 false 권장)   |
+| 에러 메시지         | 콘솔 출력               | 콘솔 출력 (로깅 프레임워크 도입 권장) |
 
 ---
 
@@ -641,3 +769,4 @@ public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
 □ React 개발 서버 실행
   npm run dev → http://localhost:5173 확인
 ```
+---
