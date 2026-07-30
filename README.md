@@ -14,7 +14,9 @@
 
 | 로그인 / 게시판 목록 | 유료 게시글 잠금 화면 |
 |---|---|
-| ![로그인 화면](./docs/images/login.png) | ![유료글 잠금](./docs/images/board-lock.png) |
+| ![로그인 화면](<img width="2102" height="899" alt="image" src="https://github.com/user-attachments/assets/ec3f42e4-906f-4424-b9b8-11ffa4d88ed9" />
+) | ![유료글 잠금](<img width="1931" height="1432" alt="image" src="https://github.com/user-attachments/assets/8e3ff838-0551-43ec-929b-a1daa29ad74d" />
+) |
 
 ---
 
